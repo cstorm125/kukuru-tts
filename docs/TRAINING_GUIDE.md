@@ -130,7 +130,9 @@ You still need utility models:
 Build monotonic alignment extension:
 
 ```bash
-cd StyleTTS2/monotonic_align
+cd StyleTTS2
+git clone https://github.com/resemble-ai/monotonic_align.git
+cd monotonic_align
 python setup.py build_ext --inplace
 ```
 
