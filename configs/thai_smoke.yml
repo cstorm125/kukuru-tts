@@ -1,0 +1,153 @@
+# V1-DYNAMICS MODE: total batch 16 (v1's exact batch, split 2/GPU by DDP) so
+# each epoch takes v1's ~1,275 optimizer steps at v1's proven lr. The 8 GPUs
+# only buy wall-clock speed per step, not bigger batches. Rationale: large
+# batch needs scaled lr to converge in fewer steps, and lr > 1e-4 proved
+# unstable (2.8e-4 diverged, 1.4e-4 NaN'd at epoch 8).
+# train_second.py is single-process (DataParallel): keep an eye on GPU0 memory.
+batch_size: 16
+epochs: 2  # v1 exact
+epochs_1st: 2
+epochs_2nd: 2
+save_freq: 1
+pretrained_model: "../training/kokoro_base.pth"
+first_stage_path: "first_stage.pth"
+load_only_params: true
+second_stage_load_pretrained: false
+# ─────────────────────────────────────────────────────────────────────────────
+# Kokoro Thai Fine-Tuning Config — v2 (5-tone mapping)
+# ─────────────────────────────────────────────────────────────────────────────
+# v2 data: high tone ˦˥ → ↑ (token 170), rising ˩˩˦ → ↗. Requires:
+# - train_list/val_list from s3://fast-thai-g2p/kokoro-thai-v2/
+# - config.json with vocab["↑"]=170 (115 symbols)
+# - kokoro_symbols.py with '↑' at index 170
+# - FastThaiG2P >= 2db2c26 for inference G2P
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+log_dir: "logs/thai-smoke"
+
+# ── Data ─────────────────────────────────────────────────────────────────────
+data_params:
+  train_data: "../training_smoke/train_list.txt"
+  val_data: "../training_smoke/val_list.txt"
+  root_path: "../dataset/audio"
+  OOD_data: "../training_smoke/OOD_texts.txt"
+  min_length: 30
+  num_workers: 32  # p5.48xlarge has 192 vCPUs; 7 was for the 16-vCPU box
+
+# ── Preprocessing ────────────────────────────────────────────────────────────
+preprocess_params:
+  sr: 24000
+  spect_params:
+    n_fft: 2048
+    win_length: 1200
+    hop_length: 300
+    n_mels: 80
+    fmin: 0
+    fmax: 8000
+
+# ── Model Architecture ──────────────────────────────────────────────────────
+# Must match Kokoro-82M exactly to load pre-trained weights
+model_params:
+  dim_in: 64
+  n_token: 178
+  hidden_dim: 512
+  style_dim: 128
+  max_dur: 50
+  multispeaker: false
+  n_mels: 80
+  dropout: 0.2
+  n_layer: 3
+  text_encoder_kernel_size: 5
+
+  decoder:
+    type: istftnet
+    upsample_rates: [10, 6]
+    upsample_kernel_sizes: [20, 12]
+    upsample_initial_channel: 512
+    resblock_kernel_sizes: [3, 7, 11]
+    resblock_dilation_sizes: [[1, 3, 5], [1, 3, 5], [1, 3, 5]]
+    gen_istft_n_fft: 20
+    gen_istft_hop_size: 5
+
+  diffusion:
+    embedding_mask_proba: 0.1
+    transformer:
+      num_layers: 3
+      num_heads: 8
+      head_features: 64
+      multiplier: 2
+    dist:
+      sigma_data: 0.2
+      estimate_sigma_data: true
+      mean: -3.0
+      std: 1.0
+
+  plbert:
+    hidden_size: 768
+    num_attention_heads: 12
+    intermediate_size: 2048
+    max_position_embeddings: 512
+    num_hidden_layers: 12
+    dropout: 0.1
+
+  slm:
+    model: "microsoft/wavlm-base-plus"
+    sr: 16000
+    hidden: 768
+    nlayers: 13
+    initial_channel: 64
+
+# ── Loss Weights ─────────────────────────────────────────────────────────────
+loss_params:
+  lambda_gen: 1.0
+  lambda_mel: 5.0
+  lambda_dur: 1.0
+  lambda_ce: 20.0
+  lambda_F0: 1.0
+  lambda_norm: 1.0
+  lambda_s2s: 1.0
+  lambda_mono: 1.0
+  lambda_slm: 1.0
+  lambda_diff: 0.0
+  lambda_sty: 0.0
+  TMA_epoch: 0
+  diff_epoch: 999
+  joint_epoch: 5
+
+# ── Optimizer ────────────────────────────────────────────────────────────────
+# v1 dynamics: flat 1e-4, no warmup (warmup_steps: 0 → factor 1 from step 1).
+# Plateau decay stays as the endgame refinement once val mel stalls.
+optimizer_params:
+  lr: 0.0001
+  bert_lr: 0.00001
+  ft_lr: 0.0001
+  warmup_steps: 0
+  grad_clip: 0       # v1 had no clipping
+  lr_decay_factor: 0.5   # halve LR when val mel plateaus...
+  lr_patience: 999         # ...for this many consecutive epochs
+  min_lr_factor: 0.0625  # floor at peak/16
+
+# ── Early stopping (Stage 1) ─────────────────────────────────────────────────
+early_stopping:
+  patience: 999       # stop after this many epochs without...
+  min_delta: 0.001   # ...val mel improving by at least this much
+
+# ── Pitch Extractor ──────────────────────────────────────────────────────────
+F0_path: "Utils/JDC/bst.t7"
+
+# ── ASR Alignment Model ─────────────────────────────────────────────────────
+ASR_config: "Utils/ASR/config.yml"
+ASR_path: "Utils/ASR/epoch_00080.pth"
+
+# ── PLBERT ───────────────────────────────────────────────────────────────────
+PLBERT_dir: "Utils/PLBERT/"
+
+slmadv_params:
+  min_len: 100
+  max_len: 500
+  batch_percentage: 0.5
+  iter: 10
+  thresh: 5
+  scale: 0.01
+  sig: 1.5

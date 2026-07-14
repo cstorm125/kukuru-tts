@@ -26,6 +26,7 @@ git submodule update --init   # kokoro (StyleTTS2 is vendored, patches included)
 uv sync
 uv pip install torchaudio==2.6.0 librosa munch pandas matplotlib tensorboard \
     einops einops-exts nltk accelerate pythainlp wandb pytest \
+    onnx onnxruntime \
     "git+https://github.com/resemble-ai/monotonic_align.git"
 uv pip install "git+https://github.com/cstorm125/FastThaiG2P.git"
 # training/: put kokoro_base.pth + config.json + kokoro_symbols.py here
@@ -113,6 +114,16 @@ GitHub release of FastThaiG2P, then bump `_RELEASE_URL` in
 aws s3 sync dist/thai_v2/ s3://fast-thai-g2p/kokoro-thai/checkpoints/v2/...
 aws s3 cp StyleTTS2/logs/thai/first_stage.pth s3://.../checkpoints/v2/
 ```
+
+## Smoke test (verify the pipeline before a real run)
+
+The whole chain was verified 2026-07-14 on a 400-utterance synthetic set:
+`prepare_thai_dataset.py` → 2-epoch stage 1 (val 1.02, ~8 min) → 2-epoch
+stage 2 (val 0.83) → `package_thai.py` produced pth+ONNX+voicepack+samples.
+`configs/thai_smoke.yml` is that config — run it after any change to the
+vendored StyleTTS2 to confirm nothing broke. (Loss values that high are
+expected at 2 epochs on 400 clips; the point is no crash/NaN and audible
+speech in `dist/smoke/samples/`.)
 
 ## History
 

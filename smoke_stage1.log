@@ -1,0 +1,40 @@
+bert loaded (25/25 tensors)
+bert_encoder loaded (2/2 tensors)
+predictor loaded (122/122 tensors)
+decoder loaded (375/375 tensors)
+text_encoder loaded (24/24 tensors)
+warning: audio amplitude out of range, auto clipped.
+warning: audio amplitude out of range, auto clipped.
+warning: audio amplitude out of range, auto clipped.
+warning: audio amplitude out of range, auto clipped.
+warning: audio amplitude out of range, auto clipped.
+Epoch [1/2], Step [10/22], Mel Loss: 1.05502, Gen Loss: 8.21282, Disc Loss: 7.34310, Mono Loss: 0.08380, S2S Loss: 9.74679, SLM Loss: 2.93857
+Time elasped: 13.077943086624146
+Epoch [1/2], Step [20/22], Mel Loss: 1.04864, Gen Loss: 7.90358, Disc Loss: 7.05269, Mono Loss: 0.08368, S2S Loss: 8.26881, SLM Loss: 2.93264
+Time elasped: 23.467880964279175
+Epochs: 1
+Validation loss: 1.023
+
+
+
+
+
+
+
+
+Saving..
+Epoch [2/2], Step [10/22], Mel Loss: 1.03743, Gen Loss: 7.52451, Disc Loss: 6.72289, Mono Loss: 0.10759, S2S Loss: 6.99357, SLM Loss: 3.00880
+Time elasped: 12.143017768859863
+Epoch [2/2], Step [20/22], Mel Loss: 1.00477, Gen Loss: 7.16863, Disc Loss: 6.46731, Mono Loss: 0.07693, S2S Loss: 6.41562, SLM Loss: 2.87175
+Time elasped: 22.497217893600464
+Epochs: 2
+Validation loss: 1.029
+
+
+
+
+
+
+
+
+Saving..

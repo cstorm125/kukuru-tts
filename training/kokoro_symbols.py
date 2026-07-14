@@ -185,7 +185,7 @@ symbols = [
     '\ue039',  # 167: (unused placeholder)
     '\ue03a',  # 168: (unused placeholder)
     '↓',  # 169: U+2193 (↓)
-    '\ue03b',  # 170: (unused placeholder)
+    '↑',  # 170: U+2191 (↑) — repurposed as Thai high tone
     '→',  # 171: U+2192 (→)
     '↗',  # 172: U+2197 (↗)
     '↘',  # 173: U+2198 (↘)
