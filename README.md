@@ -1,4 +1,31 @@
-# kikiri-tts
+# kukuru-tts
+
+Thai fork of [kikiri-tts](https://github.com/semidark/kikiri-tts): fine-tune
+[Kokoro-82M](https://github.com/hexgrad/kokoro) for **Thai** (v2 five-tone
+phoneme format) with a vendored, patched [StyleTTS2](https://github.com/yl4579/StyleTTS2).
+Runtime lives in [FastThaiG2P](https://github.com/cstorm125/FastThaiG2P) —
+this repo produces the checkpoints it serves.
+
+**Start here → [`docs/THAI_RUNBOOK.md`](docs/THAI_RUNBOOK.md)** — the
+measured, end-to-end recipe: dataset prep → Stage 1 → Stage 2 → package →
+ship. It encodes the lessons from the v2 run (single-GPU only, LR ceiling,
+Stage 2 OOM handling, voicepack mixing, ONNX validation).
+
+Thai-specific entry points:
+- `scripts/prepare_thai_dataset.py` — (text, wav) pairs → validated training lists
+- `scripts/train_thai.sh` — both stages, watchdogged
+- `scripts/package_thai.py` — checkpoints → pth/ONNX/voicepack/samples
+- `configs/thai_stage1.yml` / `configs/thai_stage2_resume_example.yml`
+
+Differences from upstream kikiri-tts: StyleTTS2 is vendored (not a
+submodule) with Thai-run patches committed — wandb audio logging,
+checkpoint-loader prefix fix, stage-2 resume fix, configurable grad clip.
+The German docs below are retained from upstream and still apply to the
+shared machinery.
+
+---
+
+<details><summary>Original kikiri-tts (German) README</summary>
 
 <img src="docs/images/kikiri-tts-logo.png" alt="kikiri-tts logo" width="150">
 
@@ -128,3 +155,5 @@ See `NOTICE` for upstream attribution and license details.
 ## License
 
 Apache License 2.0 — see `LICENSE`.
+
+</details>
