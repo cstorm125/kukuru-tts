@@ -1,11 +1,10 @@
-# V1-DYNAMICS MODE: total batch 16 (v1's exact batch, split 2/GPU by DDP) so
-# each epoch takes v1's ~1,275 optimizer steps at v1's proven lr. The 8 GPUs
-# only buy wall-clock speed per step, not bigger batches. Rationale: large
-# batch needs scaled lr to converge in fewer steps, and lr > 1e-4 proved
-# unstable (2.8e-4 diverged, 1.4e-4 NaN'd at epoch 8).
-# train_second.py is single-process (DataParallel): keep an eye on GPU0 memory.
+# Thai Kokoro fine-tune — proven single-GPU recipe.
+# Batch 16, flat lr 1e-4: measured stability envelope of this GAN.
+# Higher LR diverges (2.8e-4) or NaNs late (1.4e-4); bigger batches on
+# more GPUs converge on paper but sound worse (InstanceNorm micro-batch
+# statistics). Train on ONE GPU. See docs/THAI_RUNBOOK.md.
 batch_size: 8   # joint/adversarial phase OOMs at 16 on 80GB (decoder+GAN+WavLM grads)
-epochs: 20  # v1 exact
+epochs: 20
 epochs_1st: 20
 epochs_2nd: 10
 save_freq: 2
@@ -14,10 +13,10 @@ first_stage_path: "first_stage.pth"
 load_only_params: false
 second_stage_load_pretrained: true
 # ─────────────────────────────────────────────────────────────────────────────
-# Kokoro Thai Fine-Tuning Config — v2 (5-tone mapping)
+# Kokoro Thai Fine-Tuning Config (5-tone mapping)
 # ─────────────────────────────────────────────────────────────────────────────
-# v2 data: high tone ˦˥ → ↑ (token 170), rising ˩˩˦ → ↗. Requires:
-# - train_list/val_list from s3://fast-thai-g2p/kokoro-thai-v2/
+# Phoneme format: high tone ˦˥ → ↑ (token 170), rising ˩˩˦ → ↗. Requires:
+# - train_list/val_list from scripts/prepare_thai_dataset.py
 # - config.json with vocab["↑"]=170 (115 symbols)
 # - kokoro_symbols.py with '↑' at index 170
 # - FastThaiG2P >= 2db2c26 for inference G2P
@@ -116,14 +115,14 @@ loss_params:
   joint_epoch: 5
 
 # ── Optimizer ────────────────────────────────────────────────────────────────
-# v1 dynamics: flat 1e-4, no warmup (warmup_steps: 0 → factor 1 from step 1).
+# Flat 1e-4, no warmup (warmup_steps: 0 → factor 1 from step 1).
 # Plateau decay stays as the endgame refinement once val mel stalls.
 optimizer_params:
   lr: 0.0001
   bert_lr: 0.00001
   ft_lr: 0.0001
   warmup_steps: 0
-  grad_clip: 0       # v1 had no clipping
+  grad_clip: 0       # proven recipe runs unclipped; set >0 after any NaN
   lr_decay_factor: 0.5   # halve LR when val mel plateaus...
   lr_patience: 999         # ...for this many consecutive epochs
   min_lr_factor: 0.0625  # floor at peak/16

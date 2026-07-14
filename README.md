@@ -1,14 +1,14 @@
 # kukuru-tts
 
 Thai fork of [kikiri-tts](https://github.com/semidark/kikiri-tts): fine-tune
-[Kokoro-82M](https://github.com/hexgrad/kokoro) for **Thai** (v2 five-tone
+[Kokoro-82M](https://github.com/hexgrad/kokoro) for **Thai** (five-tone
 phoneme format) with a vendored, patched [StyleTTS2](https://github.com/yl4579/StyleTTS2).
 Runtime lives in [FastThaiG2P](https://github.com/cstorm125/FastThaiG2P) —
 this repo produces the checkpoints it serves.
 
 **Start here → [`docs/THAI_RUNBOOK.md`](docs/THAI_RUNBOOK.md)** — the
 measured, end-to-end recipe: dataset prep → Stage 1 → Stage 2 → package →
-ship. It encodes the lessons from the v2 run (single-GPU only, LR ceiling,
+ship. It encodes the lessons from the original training run (single-GPU only, LR ceiling,
 Stage 2 OOM handling, voicepack mixing, ONNX validation).
 
 Thai-specific entry points:

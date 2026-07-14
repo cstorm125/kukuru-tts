@@ -3,7 +3,7 @@
 
 Input: a metadata file (csv/jsonl) mapping wav filenames to Thai text,
 plus the wav directory. Output: train_list.txt / val_list.txt /
-OOD_texts.txt in the v2 5-tone Kokoro phoneme format, hard-validated
+OOD_texts.txt in the 5-tone Kokoro phoneme format, hard-validated
 against the model vocab.
 
     python scripts/prepare_thai_dataset.py \

@@ -6,7 +6,7 @@
         --stage1-ckpt StyleTTS2/logs/thai/first_stage.pth \
         --audio-dir training/audio \
         --config training/config.json \
-        --output-dir dist/thai_v2
+        --output-dir dist/thai
 
 Produces in output-dir:
     kokoro_thai.pth      inference-format weights (KModel-loadable)

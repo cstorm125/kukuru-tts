@@ -2,7 +2,7 @@
 
 End-to-end: Thai `(text, wav)` pairs → deployable ONNX voice in
 [FastThaiG2P](https://github.com/cstorm125/FastThaiG2P). Every number in
-here was measured on the 2026-07-13/14 v2 run (p5.48xlarge, H100s);
+here was measured on the original 2026-07 training run (p5.48xlarge, H100s);
 lessons are marked ⚠.
 
 ## 0. What you need
@@ -10,7 +10,7 @@ lessons are marked ⚠.
 - `(text, wav)` pairs: 24 kHz mono WAVs + a `metadata` file (`filename|text`).
   ~20k utterances of a single speaker worked well.
 - `kokoro_base.pth` (Kokoro-82M in StyleTTS2 format) and `config.json`
-  (115-symbol v2 vocab, `↑`=170) — in `s3://fast-thai-g2p/kokoro-thai/`.
+  (115-symbol vocab, `↑`=170) — in `s3://fast-thai-g2p/kokoro-thai/`.
 - FastThaiG2P ≥ 2db2c26 (5-tone `ipa_to_kokoro`).
 - One 80 GB GPU. ⚠ More GPUs do NOT help: DDP training converged to the
   same val mel but audibly worse voices (InstanceNorm layers see
@@ -68,7 +68,7 @@ on one H100 (~22 min/epoch, both stages):
 | stage 1 val mel | 0.53 → 0.31 → 0.26 → … → **≈0.225 plateau by ep 12-14** | starts 7-8: weights didn't load. Jumps to 1.6 + disc loss collapsing to <2: LR too high, restart lower |
 | stage 1 gen/disc | gen ~3, disc ~4, both flat | disc → 0 or gen climbing while disc falls |
 | stage 2 total | ~0.3 → 0.23 pre-adversarial | NaN: symbol mapping wrong |
-| epoch 1 val | ~0.53 (worse than v1's 0.28 is EXPECTED — the ↑ tone embedding starts cold and catches up by epoch 3) | |
+| epoch 1 val | ~0.53 (high epoch-1 val is EXPECTED — the ↑ tone embedding starts cold and catches up by epoch 3) | |
 
 ⚠ **Stage 2 OOMs at batch 16 when the adversarial phase starts**
 (`joint_epoch`, displayed epoch 6): decoder+GAN+WavLM grads exceed 80 GB.
@@ -90,7 +90,7 @@ style encoder over it.
     --stage2-ckpt StyleTTS2/logs/thai/epoch_2nd_00008.pth \
     --stage1-ckpt StyleTTS2/logs/thai/first_stage.pth \
     --audio-dir training/audio --config training/config.json \
-    --output-dir dist/thai_v2
+    --output-dir dist/thai
 ```
 
 Emits inference `.pth`, validated ONNX (expect waveform corr > 0.99 vs
@@ -111,8 +111,8 @@ GitHub release of FastThaiG2P, then bump `_RELEASE_URL` in
 ## Sync out — the training box is ephemeral
 
 ```bash
-aws s3 sync dist/thai_v2/ s3://fast-thai-g2p/kokoro-thai/checkpoints/v2/...
-aws s3 cp StyleTTS2/logs/thai/first_stage.pth s3://.../checkpoints/v2/
+aws s3 sync dist/thai/ s3://<your-bucket>/kokoro-thai/checkpoints/...
+aws s3 cp StyleTTS2/logs/thai/first_stage.pth s3://<your-bucket>/kokoro-thai/checkpoints/
 ```
 
 ## Smoke test (verify the pipeline before a real run)
@@ -127,7 +127,7 @@ speech in `dist/smoke/samples/`.)
 
 ## History
 
-The v2 (5-tone) run this runbook is distilled from: Stage 1 matched the
-v1 single-GPU reference exactly (best val mel 0.2257 vs 0.2247) after we
-abandoned multi-GPU. Full artifacts under
-`s3://fast-thai-g2p/kokoro-thai/` (checkpoints/v2, samples/v2, voices).
+The 2026-07 run this runbook is distilled from: Stage 1 reached best val
+mel 0.2257 (epoch 12/20) after we abandoned multi-GPU, matching the
+earlier single-GPU reference run within noise. Full artifacts under
+`s3://fast-thai-g2p/kokoro-thai/`.
