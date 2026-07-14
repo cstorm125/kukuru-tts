@@ -3,7 +3,11 @@
 End-to-end: Thai `(text, wav)` pairs → deployable ONNX voice in
 [FastThaiG2P](https://github.com/cstorm125/FastThaiG2P). Every number in
 here was measured on the original 2026-07 training run (p5.48xlarge, H100s);
-lessons are marked ⚠.
+lessons are marked ⚠. All training curves are public in the
+[wandb project](https://wandb.ai/cstorm125/kokoro-thai) — the runs to
+compare yours against are `kokoro-thai-v1-replica-stage1` and
+`…-stage2`; the other runs are the failed batch/LR experiments described
+below (useful as what-divergence-looks-like references).
 
 ## 0. What you need
 
@@ -130,4 +134,5 @@ speech in `dist/smoke/samples/`.)
 The 2026-07 run this runbook is distilled from: Stage 1 reached best val
 mel 0.2257 (epoch 12/20) after we abandoned multi-GPU, matching the
 earlier single-GPU reference run within noise. Full artifacts under
-`s3://fast-thai-g2p/kokoro-thai/`.
+`s3://fast-thai-g2p/kokoro-thai/`; training curves at
+[wandb.ai/cstorm125/kokoro-thai](https://wandb.ai/cstorm125/kokoro-thai).

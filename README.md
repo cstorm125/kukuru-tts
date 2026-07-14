@@ -9,7 +9,10 @@ this repo produces the checkpoints it serves.
 **Start here → [`docs/THAI_RUNBOOK.md`](docs/THAI_RUNBOOK.md)** — the
 measured, end-to-end recipe: dataset prep → Stage 1 → Stage 2 → package →
 ship. It encodes the lessons from the original training run (single-GPU only, LR ceiling,
-Stage 2 OOM handling, voicepack mixing, ONNX validation).
+Stage 2 OOM handling, voicepack mixing, ONNX validation). The full training
+curves — including the failed multi-GPU and LR-scaling experiments worth
+not repeating — are public on
+[wandb.ai/cstorm125/kokoro-thai](https://wandb.ai/cstorm125/kokoro-thai).
 
 Thai-specific entry points:
 - `scripts/prepare_thai_dataset.py` — (text, wav) pairs → validated training lists
