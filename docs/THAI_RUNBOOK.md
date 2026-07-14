@@ -102,7 +102,9 @@ torch), voicepack (`.pt` + `.npy`), config, and sound-check WAVs.
 ⚠ The voicepack must use the **stage 1** style encoder with the stage 2
 prosody encoder — that's what `--style-encoder-model` is for.
 ⚠ Do NOT INT8-quantize the ONNX: the AdaIN style layers break outright
-(corr 0.02). fp32 CPU RTF is ~0.2 (8 threads) / ~0.7 (1 thread) anyway.
+(corr 0.02). fp32 on CPU is already fast — RTF ≈ 0.2 with 8 threads
+(1 s of speech costs 0.2 s of compute; lower is better), and even a
+single thread manages RTF ≈ 0.7, still faster than realtime.
 ⚠ Listen to `samples/tones.wav`-style minimal pairs (มาใหม่ ไม้ใหม่
 ไม่ไหม้ ไหม) — val mel cannot tell you whether the 5 tones are distinct.
 
