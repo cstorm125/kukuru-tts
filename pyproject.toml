@@ -3,12 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kokoro-deutsch"
+name = "kukuru-tts"
 version = "0.1.0"
-description = "Fine-tuning Kokoro-82M for German TTS using StyleTTS2"
+description = "Fine-tuning Kokoro-82M for Thai TTS using StyleTTS2"
 readme = "README.md"
 authors = [
-    { name="semidark" },
+    { name="cstorm125" },
 ]
 license = { file = "LICENSE" }
 classifiers = [
@@ -20,7 +20,7 @@ requires-python = ">=3.10, <3.14"
 dependencies = [
     "huggingface_hub",
     "loguru",
-    "misaki[en,de]>=0.9.4",
+    "misaki[en]>=0.9.4",
     "numpy",
     "soundfile",
     "torch",
@@ -36,9 +36,9 @@ sources = ["kokoro"]
 only-packages = true
 
 [project.urls]
-Homepage = "https://github.com/semidark/kikiri-tts"
-Repository = "https://github.com/semidark/kikiri-tts"
+Homepage = "https://github.com/cstorm125/kukuru-tts"
+Repository = "https://github.com/cstorm125/kukuru-tts"
 Upstream = "https://github.com/hexgrad/kokoro"
 
-[tool.uv.sources]
-misaki = { git = "https://github.com/semidark/misaki.git", branch = "main" }
+# misaki comes from PyPI (only kokoro's KPipeline imports it; the Thai
+# pipeline uses KModel + fastthaig2p directly)
