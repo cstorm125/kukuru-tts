@@ -71,14 +71,21 @@ on one H100 (~22 min/epoch, both stages):
 |---|---|---|
 | stage 1 val mel | 0.53 → 0.31 → 0.26 → … → **≈0.225 plateau by ep 12-14** | starts 7-8: weights didn't load. Jumps to 1.6 + disc loss collapsing to <2: LR too high, restart lower |
 | stage 1 gen/disc | gen ~3, disc ~4, both flat | disc → 0 or gen climbing while disc falls |
-| stage 2 total | ~0.3 → 0.23 pre-adversarial | NaN: symbol mapping wrong |
+| stage 2 total | ~0.3 → 0.23 pre-adversarial; steps to ~0.33 at `joint_epoch` (expected: decoder leaves its L1 optimum + GT target switches to real audio) then flat | NaN: symbol mapping wrong |
+| stage 2 val | 0.35 → 0.32 pre-adv; 0.324 → 0.318 through the adversarial epochs, F0 1.53 → 1.22 | val climbing epoch-over-epoch after joint_epoch |
+| adversarial ear check | first joint epoch sounds ROUGHER than the epoch before it — recovers within ~2 epochs; final A/B'd audibly equivalent to pre-adversarial with better F0 | still rougher after 3+ joint epochs |
 | epoch 1 val | ~0.53 (high epoch-1 val is EXPECTED — the ↑ tone embedding starts cold and catches up by epoch 3) | |
 
-⚠ **Stage 2 OOMs at batch 16 when the adversarial phase starts**
-(`joint_epoch`, displayed epoch 6): decoder+GAN+WavLM grads exceed 80 GB.
-Options: batch_size 8 from the start, or let it crash after
-`epoch_2nd_00004.pth` and resume with `configs/thai_stage2_resume_example.yml`
-(halved batch, `second_stage_load_pretrained: true`, `load_only_params: false`).
+⚠ **Stage 2 must run at batch 8 once the adversarial phase starts**
+(`joint_epoch`, displayed epoch 6): decoder+GAN+WavLM grads exceed 80 GB
+at batch 16. Set batch_size 8 from the start, or resume a crashed run
+with `configs/thai_stage2_resume_example.yml` (halved batch,
+`second_stage_load_pretrained: true`, `load_only_params: false`).
+
+⚠ **Checkpoints save every `save_freq` (2) epochs and the final epoch is
+NOT special-cased** — a 10-epoch stage 2 leaves `epoch_2nd_00008.pth` as
+the last artifact. Fine in practice (val is flat by then), but set
+`save_freq: 1` if you want the literal last epoch.
 
 ⚠ Two resume bugs are fixed in this repo's vendored StyleTTS2 — if you
 ever rebase onto upstream, re-check them: `models.py::load_checkpoint`
@@ -131,10 +138,20 @@ vendored StyleTTS2 to confirm nothing broke. (Loss values that high are
 expected at 2 epochs on 400 clips; the point is no crash/NaN and audible
 speech in `dist/smoke/samples/`.)
 
-## History
+## Reference run (2026-07-13 → 07-15, completed end-to-end)
 
-The 2026-07 run this runbook is distilled from: Stage 1 reached best val
-mel 0.2257 (epoch 12/20) after we abandoned multi-GPU, matching the
-earlier single-GPU reference run within noise. Full artifacts under
+The run this runbook is distilled from, start to finish on one H100:
+
+| stage | config | wall-clock | result |
+|---|---|---|---|
+| Stage 1 | batch 16, flat 1e-4, 20 epochs | ~7.5 h (~22 min/epoch) | best val mel **0.2257** @ epoch 12 (`first_stage.pth`) |
+| Stage 2 pre-adv | batch 16, epochs 1-5 | ~2 h (~22 min/epoch) | val 0.347 → 0.332, dur 0.23 → 0.21 |
+| Stage 2 adversarial | batch 8 (resumed), epochs 6-10 | ~4 h (~50 min/epoch) | val **0.318**, F0 **1.22**; last saved ckpt `epoch_2nd_00008.pth` |
+| Package | `package_thai.py` | ~15 min | ONNX corr > 0.995 vs torch; CPU RTF ≈ 0.2 |
+
+Shipped as [FastThaiG2P v0.3.0](https://github.com/cstorm125/FastThaiG2P/releases/tag/v0.3.0)
+(zero-arg `TTS()` downloads it). Full artifacts under
 `s3://fast-thai-g2p/kokoro-thai/`; training curves at
-[wandb.ai/cstorm125/kokoro-thai](https://wandb.ai/cstorm125/kokoro-thai).
+[wandb.ai/cstorm125/kokoro-thai](https://wandb.ai/cstorm125/kokoro-thai)
+(runs `kokoro-thai-v1-replica-stage1` / `-stage2`; other runs are the
+failed batch/LR experiments — useful divergence references).
