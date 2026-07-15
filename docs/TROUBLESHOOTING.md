@@ -1,8 +1,13 @@
 # Troubleshooting
 
+> Inherited from upstream [kikiri-tts](https://github.com/semidark/kikiri-tts) (German).
+> The StyleTTS2 machinery it documents is shared; some examples reference German runs.
+> For the Thai recipe, start at [`THAI_RUNBOOK.md`](THAI_RUNBOOK.md).
+
+
 This document collects the critical training failures found during German Kokoro fine-tuning and how they were fixed.
 
-If you are looking for the step-by-step path, use `TRAINING_GUIDE.md`.
+If you are looking for the step-by-step path, use `THAI_RUNBOOK.md`.
 
 ## Setup / Environment
 

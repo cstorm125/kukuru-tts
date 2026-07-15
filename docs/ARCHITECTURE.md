@@ -1,8 +1,13 @@
 # Architecture and Compatibility Notes
 
+> Inherited from upstream [kikiri-tts](https://github.com/semidark/kikiri-tts) (German).
+> The StyleTTS2 machinery it documents is shared; some examples reference German runs.
+> For the Thai recipe, start at [`THAI_RUNBOOK.md`](THAI_RUNBOOK.md).
+
+
 Technical reference for Kokoro-82M fine-tuning compatibility.
 
-For how-to training steps, use `TRAINING_GUIDE.md`.
+For how-to training steps, use `THAI_RUNBOOK.md`.
 
 ## Kokoro-82M Component Layout
 
