@@ -69,8 +69,9 @@ Then make the audio visible where the config expects it
 ln -s "$(pwd)/dataset/audio" training/audio
 ```
 
-**Bring-your-own-data requirements:** 24 kHz mono WAVs (resample first —
-the loader does not resample); single speaker (the recipe runs
+**Bring-your-own-data requirements:** 24 kHz mono WAVs preferred (the
+loader resamples other rates via librosa, at a per-batch CPU cost — for
+20k+ clips convert once upfront); single speaker (the recipe runs
 `multispeaker: false`); clips roughly 1–15 s; text is plain Thai (the
 normalizer converts numbers/latin, but heavy code-switching gets
 letter-spelled). ~20k utterances produced the shipped voice; a few
