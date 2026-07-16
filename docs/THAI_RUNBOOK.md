@@ -33,8 +33,13 @@ uv pip install torchaudio==2.6.0 librosa munch pandas matplotlib tensorboard \
     onnx onnxruntime \
     "git+https://github.com/resemble-ai/monotonic_align.git"
 uv pip install "git+https://github.com/cstorm125/FastThaiG2P.git"
+# (while FastThaiG2P is private: use https://<user>:<token>@github.com/... )
 # training/: put kokoro_base.pth + config.json + kokoro_symbols.py here
 ```
+
+wandb: run `wandb login` once (or `WANDB_DISABLED=true` to opt out).
+`WANDB_PROJECT=<name>` picks the project — use a scratch project for test
+runs so real training curves stay clean.
 
 Sanity gate (must print `True 115` and `maː↑ maː↗`):
 ```bash
@@ -57,6 +62,20 @@ Normalizes text (numbers/emails/times → spoken Thai), G2Ps, maps to the
 on any phoneme character outside the vocab — this caught literal `-`
 characters that would have silently corrupted training. Never bypass it.
 
+Then make the audio visible where the config expects it
+(`root_path: ../training/audio`):
+
+```bash
+ln -s "$(pwd)/dataset/audio" training/audio
+```
+
+**Bring-your-own-data requirements:** 24 kHz mono WAVs (resample first —
+the loader does not resample); single speaker (the recipe runs
+`multispeaker: false`); clips roughly 1–15 s; text is plain Thai (the
+normalizer converts numbers/latin, but heavy code-switching gets
+letter-spelled). ~20k utterances produced the shipped voice; a few
+hundred is enough to smoke-test the pipeline but not for quality.
+
 ## 3. Train
 
 ```bash
@@ -78,8 +97,10 @@ on one H100 (~22 min/epoch, both stages):
 
 ⚠ **Stage 2 must run at batch 8 once the adversarial phase starts**
 (`joint_epoch`, displayed epoch 6): decoder+GAN+WavLM grads exceed 80 GB
-at batch 16. Set batch_size 8 from the start, or resume a crashed run
-with `configs/thai_stage2_resume_example.yml` (halved batch,
+at batch 16. Simplest: run stage 1, then edit `batch_size: 16` → `8` in
+`configs/thai_stage1.yml` before launching stage 2 (both stages read the
+same config; stage 1 genuinely wants 16). Or resume a crashed run with
+`configs/thai_stage2_resume_example.yml` (halved batch,
 `second_stage_load_pretrained: true`, `load_only_params: false`).
 
 ⚠ **Checkpoints save every `save_freq` (2) epochs and the final epoch is
@@ -127,6 +148,15 @@ GitHub release of FastThaiG2P, then bump `_RELEASE_URL` in
 aws s3 sync dist/thai/ s3://<your-bucket>/kokoro-thai/checkpoints/...
 aws s3 cp StyleTTS2/logs/thai/first_stage.pth s3://<your-bucket>/kokoro-thai/checkpoints/
 ```
+
+## Dress rehearsal (2026-07-15)
+
+The runbook was replayed literally from a fresh `git clone` on a
+1,000-pair stand-in dataset: env setup → sanity gate → dataset prep →
+full stage 1 (20 ep) → full stage 2 (10 ep @ batch 8, adversarial phase
+included) → package → `test_inference.py` on the packaged ONNX. Curves:
+[wandb kukuru-rehearsal](https://wandb.ai/cstorm125/kukuru-rehearsal).
+Every gap found was folded back into this document.
 
 ## Smoke test (verify the pipeline before a real run)
 
